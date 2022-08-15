@@ -29,9 +29,4 @@ public class Product {
 
 	@Field
 	private String describe;
-
-	private List<Employee> addEmployees;
-	private List<Employee> deleteEmployees;
-
-	private Department belongDepartment;
 }

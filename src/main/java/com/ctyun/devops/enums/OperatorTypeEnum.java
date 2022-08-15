@@ -5,5 +5,5 @@ package com.ctyun.devops.enums;
  * @date 2022/8/13 15:57
  */
 public enum OperatorTypeEnum {
-	INSERT, INSERT_BATCH, UPDATE, DELETE
+	INSERT, UPDATE, DELETE
 }
