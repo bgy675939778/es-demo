@@ -1,17 +1,13 @@
 package com.ctyun.devops.test;
 
-import java.util.Arrays;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import com.ctyun.devops.enums.OperatorTypeEnum;
-import com.ctyun.devops.enums.TargetTypeEnum;
-import com.ctyun.devops.model.CommonObject;
-import com.ctyun.devops.model.TargetObject;
+import com.ctyun.devops.model.index.Department;
+import com.ctyun.devops.repository.DepartmentRepository;
 import com.ctyun.devops.service.EsOperatorService;
 
 /**
@@ -22,6 +18,8 @@ import com.ctyun.devops.service.EsOperatorService;
 public class Test1 {
     @Autowired
     private EsOperatorService esOperatorService;
+    @Autowired
+    private DepartmentRepository departmentRepository;
 
     @Test
     public void testEmployeeInsert() {
@@ -71,12 +69,12 @@ public class Test1 {
 
     @Test
     public void testDepartmentCRUD() {
-        String addString1 = "{\"data\":{\"id\":1,\"department\":{\"name\":\"研发一部\",\"describe\":\"这是研发一部的描述，研发一部有1000人，在成都、上海都有办公区\"}},\"operator\":\"INSERT\",\"target\":\"DEPARTMENT\"}";
-        esOperatorService.processKafkaMessage(addString1);
-
-        // 编辑 name
-        String updateString1 = "{\"data\":{\"id\":1,\"department\":{\"name\":\"研发一部-update\"}},\"operator\":\"UPDATE\",\"target\":\"DEPARTMENT\"}";
-        esOperatorService.processKafkaMessage(updateString1);
+        // String addString1 = "{\"data\":{\"id\":1,\"department\":{\"name\":\"研发一部\",\"describe\":\"这是研发一部的描述，研发一部有1000人，在成都、上海都有办公区\"}},\"operator\":\"INSERT\",\"target\":\"DEPARTMENT\"}";
+        // esOperatorService.processKafkaMessage(addString1);
+        //
+        // // 编辑 name
+        // String updateString1 = "{\"data\":{\"id\":1,\"department\":{\"name\":\"研发一部-update\"}},\"operator\":\"UPDATE\",\"target\":\"DEPARTMENT\"}";
+        // esOperatorService.processKafkaMessage(updateString1);
 
 //        // 都不编辑
 //        String updateString2 = "{\"data\":{\"id\":1,\"operator\":\"UPDATE\",\"target\":\"DEPARTMENT\"}";
@@ -154,5 +152,14 @@ public class Test1 {
 //		System.out.println(JSONObject.toJSONString(singleInsertEmployee1));
 //		System.out.println(JSONObject.toJSONString(singleInsertEmployee2));
 //		System.out.println(JSONObject.toJSONString(batchInsertEmployee));
+    }
+
+    @Test
+    public void testGetByEmployeeId(){
+        long employeeId = 3L;
+
+        List<Department> departments = departmentRepository.findDepartmentsByEmployeeId(employeeId);
+
+        System.out.println();
     }
 }
