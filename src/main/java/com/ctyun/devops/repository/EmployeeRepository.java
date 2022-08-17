@@ -19,4 +19,8 @@ public interface EmployeeRepository extends ElasticsearchRepository<Employee, Lo
 
 	@Query("{\"match\":{\"products.id\": \"?0\"}}")
 	List<Employee> findEmployeesByProductId(long productId);
+
+	@Query("{\"match\":{\"departments.id\": \"?0\"}}")
+	List<Employee> findEmployeesByDepartmentId(long departmentId);
+
 }

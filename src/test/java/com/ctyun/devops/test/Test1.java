@@ -1,7 +1,9 @@
 package com.ctyun.devops.test;
 
+import java.io.IOException;
 import java.util.List;
 
+import com.ctyun.devops.service.EsOperatorService2;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,10 +18,28 @@ import com.ctyun.devops.service.EsOperatorService;
  */
 @SpringBootTest
 public class Test1 {
+//    @Autowired
+//    private EsOperatorService esOperatorService;
+
     @Autowired
-    private EsOperatorService esOperatorService;
+    private EsOperatorService2 esOperatorService;
     @Autowired
     private DepartmentRepository departmentRepository;
+
+    @Test
+    public void testQuery() throws IOException {
+        esOperatorService.queryByPrefix("zhang");
+    }
+
+    @Test
+    public void testCRUD() {
+        testEmployeeInsert();
+        testDepartmentInsert();
+        testInsertEmployeesToDepartment();
+        testProductContainsEmployeesAndDepartment();
+        testUpdateTargetAndUpdateRelationship();
+        testDeleteEmployeesAndDeleteRelationship();
+    }
 
     @Test
     public void testEmployeeInsert() {
@@ -35,7 +55,7 @@ public class Test1 {
     @Test
     public void testDepartmentInsert() {
         String addString1 = "{\"data\":{\"id\":1,\"department\":{\"name\":\"研发一部\",\"describe\":\"这是研发一部的描述，研发一部有1000人，在成都、上海都有办公区\"}},\"operator\":\"INSERT\",\"target\":\"DEPARTMENT\"}";
-        String addString2 = "{\"data\":{\"id\":2,\"department\":{\"name\":\"研发二部\",\"describe\":\"这是研发二部的描述，研发一部有2000人，在成都、北京、广州都有办公区\"}},\"operator\":\"INSERT\",\"target\":\"DEPARTMENT\"}";
+        String addString2 = "{\"data\":{\"id\":2,\"department\":{\"name\":\"研发二部\",\"describe\":\"这是研发二部的描述，研发二部有2000人，在成都、北京、广州都有办公区\"}},\"operator\":\"INSERT\",\"target\":\"DEPARTMENT\"}";
         String addString3 = "{\"data\":{\"id\":3,\"department\":{\"name\":\"云数中心\",\"describe\":\"这个部门是属于研发一部的\"}},\"operator\":\"INSERT\",\"target\":\"DEPARTMENT\"}";
         String addString4 = "{\"data\":{\"id\":4,\"department\":{\"name\":\"业务效能团队\",\"describe\":\"这是一个关注于业务效能、技术效能的团队\"}},\"operator\":\"INSERT\",\"target\":\"DEPARTMENT\"}";
 
@@ -46,12 +66,44 @@ public class Test1 {
     }
 
     @Test
-    public void testProductInsert() {
-        String addString1 = "{\"name\":\"北极星\",\"describe\":\"北极星平台的描述\",\"employees\":[{\"id\":1,\"name\":\"张三\",\"describe\":\"我是一个性格开朗的人\"},{\"id\":2,\"name\":\"李四\",\"describe\":\"我是一个性格开朗的人\"}],\"departments\":[{\"id\":1,\"name\":\"研发一部\",\"describe\":\"这是研发一部的描述，研发一部有1000人，在成都、上海都有办公区\"}]}";
-        String addString2 = "{\"name\":\"观星台\",\"describe\":\"观星台是一个监控平台\",\"employees\":[{\"id\":1,\"name\":\"张三\",\"describe\":\"我是一个性格开朗的人\"},{\"id\":2,\"name\":\"李四\",\"describe\":\"我是一个性格开朗的人\"}],\"departments\":[{\"id\":1,\"name\":\"研发一部\",\"describe\":\"这是研发一部的描述，研发一部有1000人，在成都、上海都有办公区\"}]}";
-        String addString3 = "{\"name\":\"业务技术效能平台\",\"describe\":\"业务技术效能产出的平台\",\"employees\":[{\"id\":7,\"name\":\"小白\",\"describe\":\"小白白啊白\"},{\"id\":8,\"name\":\"张效能\",\"describe\":\"我是张效能，名字有点奇怪\"}],\"departments\":[{\"id\":4,\"name\":\"业务效能团队\",\"describe\":\"这是一个关注于业务效能、技术效能的团队\"}]}";
+    public void testInsertEmployeesToDepartment() {
+        String updateString1 = "{\"target\":\"DEPARTMENT\",\"operator\":\"UPDATE\",\"data\":{\"id\":1,\"addEmployees\":[{\"id\":1,\"name\":\"张三\",\"describe\":\"我是一个性格开朗的人\"},{\"id\":2,\"name\":\"李四\",\"describe\":\"我是一个性格开朗的人\"}]}}";
+        String updateString2 = "{\"target\":\"DEPARTMENT\",\"operator\":\"UPDATE\",\"data\":{\"id\":2,\"addEmployees\":[{\"id\":3,\"name\":\"王五\",\"describe\":\"我是王五\"},{\"id\":4,\"name\":\"小明\",\"describe\":\"小明是我\"}]}}";
+        String updateString3 = "{\"target\":\"DEPARTMENT\",\"operator\":\"UPDATE\",\"data\":{\"id\":3,\"addEmployees\":[{\"id\":5,\"name\":\"小花\",\"describe\":\"小花小花小花\"},{\"id\":6,\"name\":\"晓东\",\"describe\":\"我是晓东，晓东是我\"}]}}";
+        String updateString4 = "{\"target\":\"DEPARTMENT\",\"operator\":\"UPDATE\",\"data\":{\"id\":4,\"addEmployees\":[{\"id\":7,\"name\":\"小白\",\"describe\":\"小白白啊白\"},{\"id\":8,\"name\":\"张效能\",\"describe\":\"我是张效能，名字有点奇怪\"}]}}";
+
+        esOperatorService.processKafkaMessage(updateString1);
+        esOperatorService.processKafkaMessage(updateString2);
+        esOperatorService.processKafkaMessage(updateString3);
+        esOperatorService.processKafkaMessage(updateString4);
+    }
+
+    @Test
+    public void testProductContainsEmployeesAndDepartment() {
+        String addString1 = "{\"target\":\"PRODUCT\",\"operator\":\"INSERT\",\"data\":{\"id\":1,\"product\":{\"name\":\"北极星\",\"describe\":\"北极星平台的描述\"},\"addEmployees\":[{\"id\":1,\"name\":\"张三\",\"describe\":\"我是一个性格开朗的人\"},{\"id\":2,\"name\":\"李四\",\"describe\":\"我是一个性格开朗的人\"}],\"belongDepartment\":{\"id\":1,\"name\":\"研发一部\",\"describe\":\"这是研发一部的描述，研发一部有1000人，在成都、上海都有办公区\"}}}";
+        String addString2 = "{\"target\":\"PRODUCT\",\"operator\":\"INSERT\",\"data\":{\"id\":2,\"product\":{\"name\":\"观星台\",\"describe\":\"观星台是一个监控平台\"},\"addEmployees\":[{\"id\":2,\"name\":\"李四\",\"describe\":\"我是一个性格开朗的人\"},{\"id\":5,\"name\":\"小花\",\"describe\":\"小花小花小花\"}],\"belongDepartment\":{\"id\":1,\"name\":\"研发一部\",\"describe\":\"这是研发一部的描述，研发一部有1000人，在成都、上海都有办公区\"}}}";
+        String addString3 = "{\"target\":\"PRODUCT\",\"operator\":\"INSERT\",\"data\":{\"id\":3,\"product\":{\"name\":\"业务技术效能平台\",\"describe\":\"业务技术效能产出的平台\"},\"addEmployees\":[{\"id\":7,\"name\":\"小白\",\"describe\":\"小白白啊白\"},{\"id\":8,\"name\":\"张效能\",\"describe\":\"我是张效能，名字有点奇怪\"}],\"belongDepartment\":{\"id\":4,\"name\":\"业务效能团队\",\"describe\":\"这是一个关注于业务效能、技术效能的团队\"}}}";
 
         esOperatorService.processKafkaMessage(addString1);
+        esOperatorService.processKafkaMessage(addString2);
+        esOperatorService.processKafkaMessage(addString3);
+    }
+
+    @Test
+    public void testDeleteEmployeesAndDeleteRelationship() {
+        String deleteString1 = "{\"data\":{\"employees\":[{\"id\":2},{\"id\":7}]},\"operator\":\"DELETE\",\"target\":\"EMPLOYEE\"}";
+        esOperatorService.processKafkaMessage(deleteString1);
+    }
+
+    @Test
+    public void testUpdateTargetAndUpdateRelationship() {
+        String updateEmployeeString = "{\"data\":{\"employees\":[{\"describe\":\"我修改了张三的描述\",\"id\":1}]},\"operator\":\"UPDATE\",\"target\":\"EMPLOYEE\"}";
+        String updateDepartmentString = "{\"data\":{\"id\":1,\"department\":{\"name\":\"研发一部-update\"}},\"operator\":\"UPDATE\",\"target\":\"DEPARTMENT\"}";
+        String updateProductString = "{\"target\":\"PRODUCT\",\"operator\":\"UPDATE\",\"data\":{\"id\":1,\"product\":{\"name\":\"北极星-update\",\"describe\":\"北极星平台的描述-update\"}}}";
+
+        esOperatorService.processKafkaMessage(updateEmployeeString);
+        esOperatorService.processKafkaMessage(updateDepartmentString);
+        esOperatorService.processKafkaMessage(updateProductString);
     }
 
     @Test
@@ -73,7 +125,7 @@ public class Test1 {
         // esOperatorService.processKafkaMessage(addString1);
         //
         // // 编辑 name
-        // String updateString1 = "{\"data\":{\"id\":1,\"department\":{\"name\":\"研发一部-update\"}},\"operator\":\"UPDATE\",\"target\":\"DEPARTMENT\"}";
+         String updateString1 = "{\"data\":{\"id\":1,\"department\":{\"name\":\"研发一部-update\"}},\"operator\":\"UPDATE\",\"target\":\"DEPARTMENT\"}";
         // esOperatorService.processKafkaMessage(updateString1);
 
 //        // 都不编辑
@@ -87,15 +139,6 @@ public class Test1 {
         System.out.println();
     }
 
-    @Test
-    public void testProductCRUD() {
-        String addString1 = "{\"name\":\"北极星\",\"describe\":\"北极星平台的描述\",\"employees\":[{\"id\":1,\"name\":\"张三\",\"describe\":\"我是一个性格开朗的人\"},{\"id\":2,\"name\":\"李四\",\"describe\":\"我是一个性格开朗的人\"}],\"departments\":[{\"id\":1,\"name\":\"研发一部\",\"describe\":\"这是研发一部的描述，研发一部有1000人，在成都、上海都有办公区\"}]}";
-
-        String addString2 = "{\"name\":\"观星台\",\"describe\":\"观星台是一个监控平台\",\"employees\":[{\"id\":1,\"name\":\"张三\",\"describe\":\"我是一个性格开朗的人\"},{\"id\":2,\"name\":\"李四\",\"describe\":\"我是一个性格开朗的人\"}],\"departments\":[{\"id\":1,\"name\":\"研发一部\",\"describe\":\"这是研发一部的描述，研发一部有1000人，在成都、上海都有办公区\"}]}";
-
-        String addString3 = "{\"name\":\"业务技术效能平台\",\"describe\":\"业务技术效能产出的平台\",\"employees\":[{\"id\":7,\"name\":\"小白\",\"describe\":\"小白白啊白\"},{\"id\":8,\"name\":\"张效能\",\"describe\":\"我是张效能，名字有点奇怪\"}],\"departments\":[{\"id\":4,\"name\":\"业务效能团队\",\"describe\":\"这是一个关注于业务效能、技术效能的团队\"}]}";
-
-    }
 
 
     @Test
@@ -155,7 +198,7 @@ public class Test1 {
     }
 
     @Test
-    public void testGetByEmployeeId(){
+    public void testGetByEmployeeId() {
         long employeeId = 3L;
 
         List<Department> departments = departmentRepository.findDepartmentsByEmployeeId(employeeId);

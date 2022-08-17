@@ -53,4 +53,12 @@ public class ElasticRestClientConfig extends AbstractElasticsearchConfiguration 
 	public ElasticsearchRestTemplate elasticsearchRestTemplate(RestHighLevelClient elasticsearchClient, ElasticsearchConverter elasticsearchConverter) {
 		return new ElasticsearchRestTemplate(elasticsearchClient, elasticsearchConverter);
 	}
+
+	@Bean
+	public RestHighLevelClient restHighLevelClient() {
+		//RestClient.builder()可接收一个或多个HttpHost
+		return new RestHighLevelClient(RestClient.builder(
+				new HttpHost("localhost", 9200, "http")
+		));
+	}
 }
