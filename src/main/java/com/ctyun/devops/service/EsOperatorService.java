@@ -45,8 +45,6 @@ public class EsOperatorService {
     private DepartmentRepository departmentRepository;
     @Autowired
     private ProductRepository productRepository;
-
-    @Qualifier("elasticsearchRestTemplate")
     @Autowired
     private ElasticsearchRestTemplate esRestTemplate;
 

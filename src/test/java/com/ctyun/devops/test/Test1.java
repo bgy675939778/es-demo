@@ -1,16 +1,14 @@
 package com.ctyun.devops.test;
 
-import java.io.IOException;
-import java.util.List;
-
-import com.ctyun.devops.service.EsOperatorService2;
+import com.ctyun.devops.model.index.Department;
+import com.ctyun.devops.repository.DepartmentRepository;
+import com.ctyun.devops.service.EsOperatorService3;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.ctyun.devops.model.index.Department;
-import com.ctyun.devops.repository.DepartmentRepository;
-import com.ctyun.devops.service.EsOperatorService;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * @author bgy
@@ -21,14 +19,21 @@ public class Test1 {
 //    @Autowired
 //    private EsOperatorService esOperatorService;
 
+    //    @Autowired
+//    private EsOperatorService2 esOperatorService;
     @Autowired
-    private EsOperatorService2 esOperatorService;
+    private EsOperatorService3 esOperatorService;
     @Autowired
     private DepartmentRepository departmentRepository;
 
     @Test
-    public void testQuery() throws IOException {
-        esOperatorService.queryByPrefix("zhang");
+    public void testPrefixQuery() throws IOException {
+        esOperatorService.queryByPrefix("xiaoneng");
+    }
+
+    @Test
+    public void testFullTextQuery() throws IOException {
+        esOperatorService.queryByFullText("效能");
     }
 
     @Test
@@ -44,12 +49,12 @@ public class Test1 {
     @Test
     public void testEmployeeInsert() {
         String singleAddString1 = "{\"data\":{\"employees\":[{\"describe\":\"我是一个性格开朗的人\",\"id\":1,\"name\":\"张三\"}]},\"operator\":\"INSERT\",\"target\":\"EMPLOYEE\"}";
-        String singleAddString2 = "{\"data\":{\"employees\":[{\"describe\":\"我不是一个性格开朗的人\",\"id\":2,\"name\":\"李四\"}]},\"operator\":\"INSERT\",\"target\":\"EMPLOYEE\"}";
-        String batchAddString = "{\"data\":{\"employees\":[{\"describe\":\"我是王五\",\"id\":3,\"name\":\"王五\"},{\"describe\":\"小明是我\",\"id\":4,\"name\":\"小明\"},{\"describe\":\"小花小花小花\",\"id\":5,\"name\":\"小花\"},{\"describe\":\"我是晓东，晓东是我\",\"id\":6,\"name\":\"晓东\"},{\"describe\":\"小白白啊白\",\"id\":7,\"name\":\"小白\"},{\"describe\":\"我是张效能，名字有点奇怪\",\"id\":8,\"name\":\"张效能\"}]},\"operator\":\"INSERT\",\"target\":\"EMPLOYEE\"}";
+//        String singleAddString2 = "{\"data\":{\"employees\":[{\"describe\":\"我不是一个性格开朗的人\",\"id\":2,\"name\":\"李四\"}]},\"operator\":\"INSERT\",\"target\":\"EMPLOYEE\"}";
+//        String batchAddString = "{\"data\":{\"employees\":[{\"describe\":\"我是王五\",\"id\":3,\"name\":\"王五\"},{\"describe\":\"小明是我\",\"id\":4,\"name\":\"小明\"},{\"describe\":\"小花小花小花\",\"id\":5,\"name\":\"小花\"},{\"describe\":\"我是晓东，晓东是我\",\"id\":6,\"name\":\"晓东\"},{\"describe\":\"小白白啊白\",\"id\":7,\"name\":\"小白\"},{\"describe\":\"我是张效能，名字有点奇怪\",\"id\":8,\"name\":\"张效能\"}]},\"operator\":\"INSERT\",\"target\":\"EMPLOYEE\"}";
 
         esOperatorService.processKafkaMessage(singleAddString1);
-        esOperatorService.processKafkaMessage(singleAddString2);
-        esOperatorService.processKafkaMessage(batchAddString);
+//        esOperatorService.processKafkaMessage(singleAddString2);
+//        esOperatorService.processKafkaMessage(batchAddString);
     }
 
     @Test
@@ -100,10 +105,12 @@ public class Test1 {
         String updateEmployeeString = "{\"data\":{\"employees\":[{\"describe\":\"我修改了张三的描述\",\"id\":1}]},\"operator\":\"UPDATE\",\"target\":\"EMPLOYEE\"}";
         String updateDepartmentString = "{\"data\":{\"id\":1,\"department\":{\"name\":\"研发一部-update\"}},\"operator\":\"UPDATE\",\"target\":\"DEPARTMENT\"}";
         String updateProductString = "{\"target\":\"PRODUCT\",\"operator\":\"UPDATE\",\"data\":{\"id\":1,\"product\":{\"name\":\"北极星-update\",\"describe\":\"北极星平台的描述-update\"}}}";
-
+        String updateProductString1 = "{\"target\":\"PRODUCT\",\"operator\":\"UPDATE\",\"data\":{\"id\":2,\"product\":{\"describe\":\"观星台是一个监控平台，这是它的描述\"}}}";
+//
         esOperatorService.processKafkaMessage(updateEmployeeString);
         esOperatorService.processKafkaMessage(updateDepartmentString);
         esOperatorService.processKafkaMessage(updateProductString);
+        esOperatorService.processKafkaMessage(updateProductString1);
     }
 
     @Test
@@ -125,7 +132,7 @@ public class Test1 {
         // esOperatorService.processKafkaMessage(addString1);
         //
         // // 编辑 name
-         String updateString1 = "{\"data\":{\"id\":1,\"department\":{\"name\":\"研发一部-update\"}},\"operator\":\"UPDATE\",\"target\":\"DEPARTMENT\"}";
+        String updateString1 = "{\"data\":{\"id\":1,\"department\":{\"name\":\"研发一部-update\"}},\"operator\":\"UPDATE\",\"target\":\"DEPARTMENT\"}";
         // esOperatorService.processKafkaMessage(updateString1);
 
 //        // 都不编辑
@@ -138,7 +145,6 @@ public class Test1 {
 
         System.out.println();
     }
-
 
 
     @Test
@@ -205,4 +211,6 @@ public class Test1 {
 
         System.out.println();
     }
+
+
 }

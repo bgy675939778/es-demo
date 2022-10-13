@@ -1,0 +1,36 @@
+{
+  "analysis":{
+    "analyzer":{
+      "custom_pinyin_analyzer":{
+        "tokenizer":"my_pinyin"
+      },
+      "custom_jieba_analyzer":{
+        "tokenizer":"jieba_index",
+        "filter":[
+          "lowercase",
+//          "jieba_stop",
+          "stop_filter"
+        ]
+      }
+    },
+    "tokenizer":{
+      "my_pinyin":{
+        "type":"pinyin",
+        "keep_separate_first_letter":true,
+        "keep_original":true,
+        "remove_duplicated_term":true,
+        "ignore_pinyin_offset":false
+      }
+    },
+    "filter":{
+//      "jieba_stop":{
+//        "type":"stop",
+//        "stopwords_path":"stopwords/stopwords.txt"
+//      },
+      "stop_filter":{
+        "type":"stop",
+        "stopwords":[" "]
+      }
+    }
+  }
+}

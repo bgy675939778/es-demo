@@ -5,7 +5,6 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
 import com.ctyun.devops.enums.OperatorTypeEnum;
-import com.ctyun.devops.model.CommonObject;
 import com.ctyun.devops.model.TargetObject;
 import com.ctyun.devops.model.index.Department;
 import com.ctyun.devops.model.index.Employee;
@@ -14,19 +13,17 @@ import com.ctyun.devops.repository.DepartmentRepository;
 import com.ctyun.devops.repository.EmployeeRepository;
 import com.ctyun.devops.repository.ProductRepository;
 import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -57,7 +54,6 @@ public class EsOperatorService2 {
     @Autowired
     private ElasticsearchRestTemplate esRestTemplate;
 
-    @Qualifier("restHighLevelClient")
     @Autowired
     private RestHighLevelClient highLevelClient;
 
@@ -124,6 +120,67 @@ public class EsOperatorService2 {
         System.out.println();
     }
 
+    public void queryByFullText(String text) throws IOException {
+        HighlightBuilder highlightBuilder = new HighlightBuilder()
+                .field("name")
+                .field("describe")
+                .field("employees.name")
+                .field("employees.describe")
+                .field("departments.name")
+                .field("departments.describe")
+                .field("products.name")
+                .field("products.describe")
+                .preTags("<span style=\"color:red\">")
+                .postTags("</span>")
+                .fragmentSize(50);
+
+        MultiMatchQueryBuilder multiMatchQueryBuilder = new MultiMatchQueryBuilder(text, "employees.name", "employees.describe",
+                "departments.name", "departments.describe", "products.name", "products.describe")
+                .field("name", 2)
+                .field("describe", 2);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder()
+                .query(multiMatchQueryBuilder)
+                .highlighter(highlightBuilder);
+
+        SearchHits searchHits = highLevelClient.search(new SearchRequest()
+                        .indices(EMPLOYEE_FIELD, DEPARTMENT_FIELD, PRODUCT_FIELD)
+                        .source(searchSourceBuilder), RequestOptions.DEFAULT)
+                .getHits();
+
+        List<JSONObject> result = new ArrayList<>();
+        if (searchHits.getHits().length > 0) {
+            for (SearchHit searchHit : searchHits.getHits()) {
+                System.out.println("---------------------------------------------");
+                searchHit.getHighlightFields().forEach((key, value) -> System.out.println(key + "->" + value));
+                System.out.println("-------");
+                JSONObject jsonObject = JSONObject.parseObject(searchHit.getSourceAsString());
+                jsonObject.put("type", searchHit.getIndex());
+                jsonObject.remove("_class");
+
+                Map<String, HighlightField> highlightFieldMap = searchHit.getHighlightFields();
+                highlightFieldMap.forEach((field, highlightField) -> {
+                    // 只处理非嵌套类型的高亮
+                    if (!field.contains(".")) {
+                        jsonObject.put(field, highlightField.getFragments()[0].toString());
+                    }
+//                    else {
+//                        // 如果是嵌套类型，需要跟 source 中的多个元素进行匹配
+//                        String[] strings = field.split("\\.");
+//                        JSONArray jsonArray = jsonObject.getJSONArray(strings[0]);
+//                        JSONObject jsonObject1 = jsonArray.getJSONObject(0);
+//                        jsonObject1.put(strings[1], highlightField.getFragments()[0].toString());
+//                    }
+                });
+
+                jsonObject.forEach((key, value) -> System.out.println(key + " -> " + value));
+                System.out.println("---------------------------------------------");
+
+                result.add(jsonObject);
+            }
+        }
+        System.out.println();
+    }
+
 //    public void queryByPrefix(String prefix) {
 //        IndexBoost employeeIndex = new IndexBoost(EMPLOYEE_FIELD, 2);
 //        IndexBoost departmentIndex = new IndexBoost(DEPARTMENT_FIELD, 1);
@@ -150,10 +207,6 @@ public class EsOperatorService2 {
 //        RestHighLevelClient restHighLevelClient = new RestHighLevelClient();
 //        SearchResponse response = restHighLevelClient.search(searchQuery, RequestOptions.DEFAULT)
 //    }
-
-    public void queryByFullText(String text) {
-
-    }
 
     public void processKafkaMessage(String message) {
         TargetObject targetObject = JSONObject.parseObject(message).toJavaObject(TargetObject.class);
